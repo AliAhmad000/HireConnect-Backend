@@ -1,0 +1,100 @@
+server:
+  port: 8081
+  forward-headers-strategy: framework
+
+spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+  application:
+    name: auth-service
+
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/auth_db
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:1212}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: ${GITHUB_CLIENT_ID:Ov23liEASdXXnDoO0spc}
+            client-secret: ${GITHUB_CLIENT_SECRET:41b87c489a0bcd9184c21570b5ab68d32cefc850}
+            scope: user:email,read:user
+            redirect-uri: "http://localhost:8081/login/oauth2/code/github"
+        provider:
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: login
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: /
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:noreply@hireconnect.com}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: false
+    hostname: localhost
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+app:
+  frontend-url: ${FRONTEND_URL:http://localhost:4200}
+  jwt:
+    secret: ${JWT_SECRET:HireConnect2024SecretKeyForJWTTokenValidationMustBe256BitsLong}
+    expiration-ms: 86400000       # 24 hours
+    refresh-expiration-ms: 604800000  # 7 days
+  rabbitmq:
+    exchange: hireconnect.exchange
+    routing-key:
+      notification: notification.routing.key
+  mail:
+    from: ${MAIL_FROM:${MAIL_USERNAME:noreply@hireconnect.com}}
+    from-name: HireConnect
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+logging:
+  level:
+    com.hireconnect: DEBUG
+    org.springframework.security: INFO

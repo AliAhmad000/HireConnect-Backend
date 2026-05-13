@@ -1,0 +1,211 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      
+
+      routes:
+        # ── Auth Service ──────────────────────────────────────────────────────
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - name: JwtAuthenticationFilter
+
+        - id: auth-oauth2
+          uri: lb://auth-service
+          predicates:
+            - Path=/oauth2/**
+
+        - id: auth-login
+          uri: lb://auth-service
+          predicates:
+            - Path=/login/**
+          
+
+        # ── Profile Service ───────────────────────────────────────────────────
+        - id: profile-service
+          uri: lb://profile-service
+          predicates:
+            - Path=/api/v1/profiles/**
+          filters:
+            - name: JwtAuthenticationFilter
+
+        - id: profile-service-uploads
+          uri: lb://profile-service
+          predicates:
+            - Path=/uploads/resumes/**
+
+        # ── Job Service ───────────────────────────────────────────────────────
+        - id: job-service
+          uri: lb://job-service
+          predicates:
+            - Path=/api/v1/jobs/**
+          filters:
+            - name: JwtAuthenticationFilter
+
+        # ── Application Service ───────────────────────────────────────────────
+        - id: application-service
+          uri: lb://application-service
+          predicates:
+            - Path=/api/v1/applications/**
+          filters:
+            - name: JwtAuthenticationFilter
+
+        # ── Interview Service ─────────────────────────────────────────────────
+        - id: interview-service
+          uri: lb://interview-service
+          predicates:
+            - Path=/api/v1/interviews/**
+          filters:
+            - name: JwtAuthenticationFilter
+
+        # ── Notification Service ──────────────────────────────────────────────
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/v1/notifications/**
+          filters:
+            - name: JwtAuthenticationFilter
+
+        # ── Subscription Service ──────────────────────────────────────────────
+        - id: subscription-service
+          uri: lb://subscription-service
+          predicates:
+            - Path=/api/v1/subscriptions/**
+          filters:
+            - name: JwtAuthenticationFilter
+
+        # ── Analytics Service ─────────────────────────────────────────────────
+        - id: analytics-service
+          uri: lb://analytics-service
+          predicates:
+            - Path=/api/v1/analytics/**
+          filters:
+            - name: JwtAuthenticationFilter
+
+        # ── Swagger Aggregation (each service's /api-docs) ─────────────────────
+        - id: auth-service-docs
+          uri: lb://auth-service
+          predicates:
+            - Path=/docs/auth-service/**
+          filters:
+            - RewritePath=/docs/auth-service/(?<segment>.*), /${segment}
+
+        - id: profile-service-docs
+          uri: lb://profile-service
+          predicates:
+            - Path=/docs/profile-service/**
+          filters:
+            - RewritePath=/docs/profile-service/(?<segment>.*), /${segment}
+
+        - id: job-service-docs
+          uri: lb://job-service
+          predicates:
+            - Path=/docs/job-service/**
+          filters:
+            - RewritePath=/docs/job-service/(?<segment>.*), /${segment}
+
+        - id: application-service-docs
+          uri: lb://application-service
+          predicates:
+            - Path=/docs/application-service/**
+          filters:
+            - RewritePath=/docs/application-service/(?<segment>.*), /${segment}
+
+        - id: interview-service-docs
+          uri: lb://interview-service
+          predicates:
+            - Path=/docs/interview-service/**
+          filters:
+            - RewritePath=/docs/interview-service/(?<segment>.*), /${segment}
+
+        - id: notification-service-docs
+          uri: lb://notification-service
+          predicates:
+            - Path=/docs/notification-service/**
+          filters:
+            - RewritePath=/docs/notification-service/(?<segment>.*), /${segment}
+
+        - id: subscription-service-docs
+          uri: lb://subscription-service
+          predicates:
+            - Path=/docs/subscription-service/**
+          filters:
+            - RewritePath=/docs/subscription-service/(?<segment>.*), /${segment}
+
+        - id: analytics-service-docs
+          uri: lb://analytics-service
+          predicates:
+            - Path=/docs/analytics-service/**
+          filters:
+            - RewritePath=/docs/analytics-service/(?<segment>.*), /${segment}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:HireConnect2024SecretKeyForJWTTokenValidationMustBe256BitsLong}
+  public-paths:
+    - /api/v1/auth/register
+    - /api/v1/auth/login
+    - /api/v1/auth/forgot-password
+    - /api/v1/auth/reset-password
+    - /api/v1/auth/refresh
+    - /api/v1/jobs
+    - /api/v1/jobs/**
+    - /actuator/**
+    - /docs/**
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.hireconnect: DEBUG
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: auth-service
+        url: /docs/auth-service/api-docs
+
+      - name: profile-service
+        url: /docs/profile-service/api-docs
+      - name: job-service
+        url: /docs/job-service/api-docs
+      - name: application-service
+        url: /docs/application-service/api-docs
+      - name: interview-service
+        url: /docs/interview-service/api-docs
+      - name: notification-service
+        url: /docs/notification-service/api-docs
+      - name: subscription-service
+        url: /docs/subscription-service/api-docs
+      - name: analytics-service
+        url: /docs/analytics-service/api-docs
+  api-docs:
+    enabled: true

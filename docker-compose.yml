@@ -1,0 +1,157 @@
+name: hireconnect-backend
+
+x-common-env: &common-env
+  DB_USERNAME: ${DB_USERNAME:-root}
+  DB_PASSWORD: ${DB_PASSWORD:-1212}
+  EUREKA_URL: http://service-registry:8761/eureka/
+  RABBITMQ_HOST: rabbitmq
+  RABBITMQ_PORT: 5672
+  RABBITMQ_USERNAME: guest
+  RABBITMQ_PASSWORD: guest
+  FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4200}
+
+x-java-service: &java-service
+  env_file:
+    - .env
+  environment:
+    <<: *common-env
+  depends_on:
+    mysql:
+      condition: service_healthy
+    rabbitmq:
+      condition: service_healthy
+    service-registry:
+      condition: service_started
+  restart: unless-stopped
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-1212}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  service-registry:
+    build: ./Service-Registry
+    ports:
+      - "8761:8761"
+    restart: unless-stopped
+
+  auth-service:
+    <<: *java-service
+    build: ./Auth-Service
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/auth_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      EUREKA_INSTANCE_HOSTNAME: auth-service
+    ports:
+      - "8081:8081"
+
+  profile-service:
+    <<: *java-service
+    build: ./Profile-Service
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/profile_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      EUREKA_INSTANCE_HOSTNAME: profile-service
+    ports:
+      - "8082:8082"
+
+  job-service:
+    <<: *java-service
+    build: ./Job-Service
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/job_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      EUREKA_INSTANCE_HOSTNAME: job-service
+    ports:
+      - "8083:8083"
+
+  application-service:
+    <<: *java-service
+    build: ./Application-Service
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/application_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      EUREKA_INSTANCE_HOSTNAME: application-service
+    ports:
+      - "8084:8084"
+
+  interview-service:
+    <<: *java-service
+    build: ./Interview-Service
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/interview_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      EUREKA_INSTANCE_HOSTNAME: interview-service
+    ports:
+      - "8085:8085"
+
+  notification-service:
+    <<: *java-service
+    build: ./Notification-Service
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/notification_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      EUREKA_INSTANCE_HOSTNAME: notification-service
+    ports:
+      - "8086:8086"
+
+  subscription-service:
+    <<: *java-service
+    build: ./Subscription-Service
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/subscription_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      AUTH_SERVICE_URL: http://auth-service:8081/api/v1/auth
+      EUREKA_INSTANCE_HOSTNAME: subscription-service
+    ports:
+      - "8087:8087"
+
+  analytics-service:
+    <<: *java-service
+    build: ./Analytics-Service
+    environment:
+      <<: *common-env
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/analytics_db?createDatabaseIfNotExist=true&allowPublicKeyRetrieval=true&useSSL=false
+      EUREKA_INSTANCE_HOSTNAME: analytics-service
+    ports:
+      - "8088:8088"
+
+  api-gateway:
+    build: ./Api-Gateway
+    environment:
+      EUREKA_URL: http://service-registry:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-HireConnect2024SecretKeyForJWTTokenValidationMustBe256BitsLong}
+      EUREKA_INSTANCE_HOSTNAME: api-gateway
+    depends_on:
+      service-registry:
+        condition: service_started
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+volumes:
+  mysql-data:

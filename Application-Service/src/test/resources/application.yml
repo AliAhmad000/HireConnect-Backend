@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+app:
+  jwt:
+    secret: TestSecretKeyForJWTValidationMustBe256BitsLongForHmacSHA256Algorithm
+  rabbitmq:
+    exchange: test.exchange
+    routing-key:
+      notification: notification.key
+      analytics: analytics.key
+
+eureka:
+  client:
+    enabled: false
+
+logging:
+  level:
+    com.hireconnect: WARN
+    org.springframework: WARN

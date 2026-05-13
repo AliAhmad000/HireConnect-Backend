@@ -1,0 +1,78 @@
+server:
+  port: 8087
+
+spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+  application:
+    name: SUBSCRIPTION-SERVICE
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/subscription_db
+    username: ${DB_USERNAME:root} 
+    password: ${DB_PASSWORD:1212}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: /
+    
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:HireConnect2024SecretKeyForJWTTokenValidationMustBe256BitsLong}
+  subscription:
+    plans:
+      free:
+        max-job-posts: 3
+        price: 0.0
+      professional:
+        max-job-posts: 50
+        price: 1999.0
+        duration-days: 30
+      enterprise:
+        max-job-posts: 999
+        price: 4999.0
+        duration-days: 30
+  payment:
+    razorpay:
+      key-id: ${RAZORPAY_KEY_ID:rzp_test_SmBsKfbaLSW1iu}
+      key-secret: ${RAZORPAY_KEY_SECRET:91eH5NpR4pnxpl5d14Dq1GvF}
+  services:
+    auth-url: ${AUTH_SERVICE_URL:http://localhost:8081/api/v1/auth}
+  rabbitmq:
+    exchange: hireconnect.exchange
+    routing-key:
+      notification: notification.routing.key
+
+logging:
+  level:
+    com.hireconnect: DEBUG
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
