@@ -2,13 +2,27 @@ server:
   port: 8082
 
 spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+
   application:
     name: profile-service
+
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/profile_db
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:1212}
+    url: ${PROFILE_DB_URL}
+    username: ${PROFILE_DB_USERNAME}
+    password: ${PROFILE_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+    hikari:
+      maximum-pool-size: 2
+      minimum-idle: 0
+      idle-timeout: 10000
+      max-lifetime: 30000
+      connection-timeout: 20000
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -21,6 +35,7 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
   instance:
     prefer-ip-address: true
 
@@ -32,11 +47,17 @@ management:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:HireConnect2024SecretKeyForJWTTokenValidationMustBe256BitsLong}
+    secret: ${JWT_SECRET}
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
 
 springdoc:
   api-docs:
     path: /api-docs
+
   swagger-ui:
     path: /swagger-ui.html
     enabled: true

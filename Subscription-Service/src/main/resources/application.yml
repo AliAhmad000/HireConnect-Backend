@@ -6,17 +6,30 @@ spring:
     import:
       - optional:file:.env[.properties]
       - optional:file:../.env[.properties]
+
   application:
     name: SUBSCRIPTION-SERVICE
+
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/subscription_db
-    username: ${DB_USERNAME:root} 
-    password: ${DB_PASSWORD:1212}
+    url: ${SUBSCRIPTION_DB_URL}
+    username: ${SUBSCRIPTION_DB_USERNAME}
+    password: ${SUBSCRIPTION_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+    hikari:
+      maximum-pool-size: 2
+      minimum-idle: 0
+      idle-timeout: 10000
+      max-lifetime: 30000
+      connection-timeout: 20000
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
 
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
@@ -24,12 +37,12 @@ spring:
     username: ${RABBITMQ_USERNAME:guest}
     password: ${RABBITMQ_PASSWORD:guest}
     virtual-host: /
-    
 
 eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
   instance:
     prefer-ip-address: true
 
@@ -41,26 +54,32 @@ management:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:HireConnect2024SecretKeyForJWTTokenValidationMustBe256BitsLong}
+    secret: ${JWT_SECRET}
+
   subscription:
     plans:
       free:
         max-job-posts: 3
         price: 0.0
+
       professional:
         max-job-posts: 50
         price: 1999.0
         duration-days: 30
+
       enterprise:
         max-job-posts: 999
         price: 4999.0
         duration-days: 30
+
   payment:
     razorpay:
-      key-id: ${RAZORPAY_KEY_ID:rzp_test_SmBsKfbaLSW1iu}
-      key-secret: ${RAZORPAY_KEY_SECRET:91eH5NpR4pnxpl5d14Dq1GvF}
+      key-id: ${RAZORPAY_KEY_ID}
+      key-secret: ${RAZORPAY_KEY_SECRET}
+
   services:
     auth-url: ${AUTH_SERVICE_URL:http://localhost:8081/api/v1/auth}
+
   rabbitmq:
     exchange: hireconnect.exchange
     routing-key:
@@ -73,6 +92,7 @@ logging:
 springdoc:
   api-docs:
     path: /api-docs
+
   swagger-ui:
     path: /swagger-ui.html
     enabled: true

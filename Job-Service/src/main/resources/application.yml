@@ -2,13 +2,27 @@ server:
   port: 8083
 
 spring:
+  config:
+    import:
+      - optional:file:.env[.properties]
+      - optional:file:../.env[.properties]
+
   application:
     name: job-service
+
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/job_db
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:1212}
+    url: ${JOB_DB_URL}
+    username: ${JOB_DB_USERNAME}
+    password: ${JOB_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+    hikari:
+      maximum-pool-size: 2
+      minimum-idle: 0
+      idle-timeout: 10000
+      max-lifetime: 30000
+      connection-timeout: 20000
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,6 +30,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+
   rabbitmq:
     host: ${RABBITMQ_HOST:localhost}
     port: ${RABBITMQ_PORT:5672}
@@ -26,6 +41,7 @@ eureka:
   client:
     service-url:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
   instance:
     prefer-ip-address: true
 
@@ -37,7 +53,8 @@ management:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:HireConnect2024SecretKeyForJWTTokenValidationMustBe256BitsLong}
+    secret: ${JWT_SECRET}
+
   rabbitmq:
     exchange: hireconnect.exchange
     routing-key:
@@ -47,6 +64,7 @@ app:
 springdoc:
   api-docs:
     path: /api-docs
+
   swagger-ui:
     path: /swagger-ui.html
     enabled: true

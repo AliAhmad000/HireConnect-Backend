@@ -40,11 +40,10 @@ public class CandidateProfile {
     @Column(length = 10)
     private String gender;
 
-    @ElementCollection
-    @CollectionTable(name = "candidate_skills", joinColumns = @JoinColumn(name = "profile_id"))
-    @Column(name = "skill")
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_id")
     @Builder.Default
-    private List<String> skills = new ArrayList<>();
+    private List<CandidateSkill> skills = new ArrayList<>();
 
     private Integer experience;       // years
 
@@ -79,11 +78,10 @@ public class CandidateProfile {
     @Builder.Default
     private Boolean isOpenToRemote = false;
 
-    @ElementCollection
-    @CollectionTable(name = "candidate_preferred_locations", joinColumns = @JoinColumn(name = "profile_id"))
-    @Column(name = "location")
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "profile_id")
     @Builder.Default
-    private List<String> preferredLocations = new ArrayList<>();
+    private List<CandidatePreferredLocation> preferredLocations = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "profile_id")

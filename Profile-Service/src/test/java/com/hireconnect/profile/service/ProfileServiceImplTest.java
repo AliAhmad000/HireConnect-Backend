@@ -5,7 +5,10 @@ import com.hireconnect.profile.dto.request.CandidateProfileRequest;
 import com.hireconnect.profile.dto.request.RecruiterProfileRequest;
 import com.hireconnect.profile.dto.response.CandidateProfileResponse;
 import com.hireconnect.profile.dto.response.RecruiterProfileResponse;
+import com.hireconnect.profile.entity.Address;
+import com.hireconnect.profile.entity.CandidatePreferredLocation;
 import com.hireconnect.profile.entity.CandidateProfile;
+import com.hireconnect.profile.entity.CandidateSkill;
 import com.hireconnect.profile.entity.RecruiterProfile;
 import com.hireconnect.profile.exception.ProfileAlreadyExistsException;
 import com.hireconnect.profile.exception.ResourceNotFoundException;
@@ -43,15 +46,17 @@ class ProfileServiceImplTest {
     // ─── Fixtures ──────────────────────────────────────────────────────────────
 
     private CandidateProfile buildCandidateProfile(Long userId) {
-        return CandidateProfile.builder()
-                .profileId(1L).userId(userId)
-                .fullName("Alice Smith").email("alice@example.com")
-                .mobile("9876543210").experience(3)
-                .skills(List.of("Java", "Spring Boot"))
-                .resumeUrl("https://s3.example.com/alice-resume.pdf")
-                .isOpenToRemote(true)
-                .build();
-    }
+		return CandidateProfile.builder().profileId(1L).userId(userId).fullName("Alice Smith")
+				.email("alice@example.com").mobile("9876543210").experience(3)
+				.skills(List.of(CandidateSkill.builder().skill("Java").build(),
+						CandidateSkill.builder().skill("Spring Boot").build()))
+
+				.resumeUrl("https://s3.example.com/alice-resume.pdf").isOpenToRemote(true)
+				.preferredLocations(List.of(CandidatePreferredLocation.builder().location("Remote").build()))
+				.addresses(List.of(Address.builder().addressId(10L).houseNo("12B").street("MG Road").city("Bengaluru")
+						.state("Karnataka").country("India").pincode(560001).addressType("HOME").build()))
+				.build();
+	}
 
     private RecruiterProfile buildRecruiterProfile(Long userId) {
         return RecruiterProfile.builder()
