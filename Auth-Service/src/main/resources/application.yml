@@ -13,8 +13,8 @@ spring:
 
   datasource:
     url: ${AUTH_DB_URL}
-    username: ${AUTH_DB_USERNAME}
-    password: ${AUTH_DB_PASSWORD}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     hikari:
@@ -67,6 +67,10 @@ spring:
           auth: true
           starttls:
             enable: true
+            required: true
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
 
 eureka:
   client:

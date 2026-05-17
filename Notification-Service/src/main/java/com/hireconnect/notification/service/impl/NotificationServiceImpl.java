@@ -36,6 +36,9 @@ public class NotificationServiceImpl implements NotificationService {
     @Value("${app.mail.from}")
     private String fromEmail;
 
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+
     @Value("${app.mail.from-name}")
     private String fromName;
 
@@ -74,9 +77,11 @@ public class NotificationServiceImpl implements NotificationService {
         Notification saved = notificationRepository.save(notification);
         log.debug("Notification {} saved for user {}", saved.getNotificationId(), userId);
 
-        // Also send email if address available
-        if (userEmail != null && !userEmail.isBlank()) {
+        // Also send email when the recipient address is deliverable.
+        if (isDeliverableEmail(userEmail)) {
             sendEmailAlert(userEmail, title, message);
+        } else if (userEmail != null && !userEmail.isBlank()) {
+            log.info("Skipping email alert for non-deliverable recipient address: {}", userEmail);
         }
 
         return notificationMapper.toResponse(saved);
@@ -88,7 +93,7 @@ public class NotificationServiceImpl implements NotificationService {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            helper.setFrom(fromEmail, fromName);
+            helper.setFrom(getFromEmail(), fromName);
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(buildHtmlEmail(subject, body), true);
@@ -189,5 +194,28 @@ public class NotificationServiceImpl implements NotificationService {
                 </body>
                 </html>
                 """.formatted(subject, body);
+    }
+
+    private String getFromEmail() {
+        if (fromEmail != null && !fromEmail.isBlank()) {
+            return fromEmail;
+        }
+        if (mailUsername != null && !mailUsername.isBlank()) {
+            return mailUsername;
+        }
+        return "no-reply@hireconnect.local";
+    }
+
+    private boolean isDeliverableEmail(String email) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+
+        String normalized = email.trim().toLowerCase();
+        if (!normalized.matches("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) {
+            return false;
+        }
+
+        return !normalized.endsWith("@github.com");
     }
 }

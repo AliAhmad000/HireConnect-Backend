@@ -8,12 +8,15 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Component
@@ -22,6 +25,9 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private final UserCredentialRepository userRepository;
     private final JwtService jwtService;
+
+    @Value("${app.frontend-url:http://localhost:4200}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(
@@ -65,15 +71,19 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String refreshToken = jwtService.generateRefreshToken(user);
 
         String redirectUrl =
-        	    "http://localhost:4200/auth/github/callback"
-        	        + "?accessToken=" + accessToken
-        	        + "&refreshToken=" + refreshToken
-        	        + "&userId=" + user.getUserId()
-        	        + "&email=" + user.getEmail()
-        	        + "&fullName=" + user.getFullName()
-        	        + "&role=" + user.getRole().name()
-        	        + "&provider=" + user.getProvider().name();
+                frontendUrl.replaceAll("/$", "") + "/auth/github/callback"
+        	        + "?accessToken=" + encode(accessToken)
+        	        + "&refreshToken=" + encode(refreshToken)
+        	        + "&userId=" + encode(String.valueOf(user.getUserId()))
+        	        + "&email=" + encode(user.getEmail())
+        	        + "&fullName=" + encode(user.getFullName())
+        	        + "&role=" + encode(user.getRole().name())
+        	        + "&provider=" + encode(user.getProvider().name());
 
         response.sendRedirect(redirectUrl);
+    }
+
+    private String encode(String value) {
+        return URLEncoder.encode(value != null ? value : "", StandardCharsets.UTF_8);
     }
 }

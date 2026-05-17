@@ -62,7 +62,8 @@ public class ProfileServiceImpl implements ProfileService {
 						request.getMobile())
 				.dob(request.getDob()).gender(request.getGender())
 				.skills(request.getSkills() != null ? request.getSkills().stream()
-						.map(skill -> CandidateSkill.builder().skill(skill).build()).toList() : new ArrayList<>())
+						.map(skill -> CandidateSkill.builder().skill(skill).build())
+						.collect(java.util.stream.Collectors.toCollection(ArrayList::new)) : new ArrayList<>())
 
 				.experience(request.getExperience()).resumeUrl(request.getResumeUrl())
 				.linkedinUrl(request.getLinkedinUrl()).githubUrl(request.getGithubUrl())
@@ -75,7 +76,7 @@ public class ProfileServiceImpl implements ProfileService {
 								? request.getPreferredLocations().stream()
 										.map(location -> CandidatePreferredLocation.builder().location(location)
 												.build())
-										.toList()
+										.collect(java.util.stream.Collectors.toCollection(ArrayList::new))
 								: new ArrayList<>())
 				.addresses(new ArrayList<>(toAddresses(request))).build();
 		CandidateProfile saved = candidateRepo.save(profile);
@@ -103,8 +104,11 @@ public class ProfileServiceImpl implements ProfileService {
 		if (request.getGender() != null)
 			profile.setGender(request.getGender());
 		if (request.getSkills() != null) {
-			profile.setSkills(
-					request.getSkills().stream().map(skill -> CandidateSkill.builder().skill(skill).build()).toList());
+			replaceList(profile.getSkills(),
+					request.getSkills().stream()
+							.map(skill -> CandidateSkill.builder().skill(skill).build())
+							.collect(java.util.stream.Collectors.toCollection(ArrayList::new)),
+					profile::setSkills);
 		}
 		if (request.getExperience() != null)
 			profile.setExperience(request.getExperience());
@@ -129,12 +133,16 @@ public class ProfileServiceImpl implements ProfileService {
 		if (request.getIsOpenToRemote() != null)
 			profile.setIsOpenToRemote(request.getIsOpenToRemote());
 		if (request.getPreferredLocations() != null) {
-			profile.setPreferredLocations(request.getPreferredLocations().stream()
-					.map(location -> CandidatePreferredLocation.builder().location(location).build()).toList());
+			replaceList(profile.getPreferredLocations(),
+					request.getPreferredLocations().stream()
+							.map(location -> CandidatePreferredLocation.builder().location(location).build())
+							.collect(java.util.stream.Collectors.toCollection(ArrayList::new)),
+					profile::setPreferredLocations);
 		}
 		if (request.getAddresses() != null) {
 			replaceList(profile.getAddresses(), toAddresses(request), profile::setAddresses);
 		}
+		ensureMutableCandidateCollections(profile);
 		return toCandidateResponse(candidateRepo.save(profile));
 	}
 
@@ -315,6 +323,22 @@ public class ProfileServiceImpl implements ProfileService {
 		} catch (UnsupportedOperationException ex) {
 			setter.accept(next);
 		}
+	}
+
+	private void ensureMutableCandidateCollections(CandidateProfile profile) {
+		if (isJdkImmutableList(profile.getSkills())) {
+			profile.setSkills(new ArrayList<>(profile.getSkills()));
+		}
+		if (isJdkImmutableList(profile.getPreferredLocations())) {
+			profile.setPreferredLocations(new ArrayList<>(profile.getPreferredLocations()));
+		}
+		if (isJdkImmutableList(profile.getAddresses())) {
+			profile.setAddresses(new ArrayList<>(profile.getAddresses()));
+		}
+	}
+
+	private boolean isJdkImmutableList(List<?> list) {
+		return list != null && list.getClass().getName().startsWith("java.util.ImmutableCollections");
 	}
 
 	private AddressResponse toAddressResponse(Address address) {

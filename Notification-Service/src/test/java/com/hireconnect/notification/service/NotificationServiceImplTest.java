@@ -89,6 +89,27 @@ class NotificationServiceImplTest {
             assertThat(result.getIsRead()).isFalse();
             verify(notificationRepository).save(any(Notification.class));
         }
+
+        @Test
+        @DisplayName("should skip outbound email for GitHub placeholder addresses")
+        void shouldSkipEmailForGithubPlaceholderAddress() {
+            Notification saved = buildNotification(1L, false);
+            NotificationResponse response = buildResponse(saved);
+
+            when(notificationRepository.save(any(Notification.class))).thenReturn(saved);
+            when(notificationMapper.toResponse(saved)).thenReturn(response);
+
+            NotificationResponse result = notificationService.sendNotification(
+                    1L, "AliAhmad000@github.com", "APPLICATION_SUBMITTED",
+                    "Application Submitted", "Your application has been submitted.",
+                    100L, "APPLICATION", "/candidate/applications/100"
+            );
+
+            assertThat(result).isNotNull();
+            verify(notificationRepository).save(any(Notification.class));
+            verify(mailSender, never()).createMimeMessage();
+            verifyNoMoreInteractions(mailSender);
+        }
     }
 
     @Nested

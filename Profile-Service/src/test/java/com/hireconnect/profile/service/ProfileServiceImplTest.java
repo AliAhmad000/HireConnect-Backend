@@ -46,17 +46,47 @@ class ProfileServiceImplTest {
     // ─── Fixtures ──────────────────────────────────────────────────────────────
 
     private CandidateProfile buildCandidateProfile(Long userId) {
-		return CandidateProfile.builder().profileId(1L).userId(userId).fullName("Alice Smith")
-				.email("alice@example.com").mobile("9876543210").experience(3)
-				.skills(List.of(CandidateSkill.builder().skill("Java").build(),
-						CandidateSkill.builder().skill("Spring Boot").build()))
+        return CandidateProfile.builder()
+                .profileId(1L)
+                .userId(userId)
+                .fullName("Alice Smith")
+                .email("alice@example.com")
+                .mobile("9876543210")
+                .experience(3)
 
-				.resumeUrl("https://s3.example.com/alice-resume.pdf").isOpenToRemote(true)
-				.preferredLocations(List.of(CandidatePreferredLocation.builder().location("Remote").build()))
-				.addresses(List.of(Address.builder().addressId(10L).houseNo("12B").street("MG Road").city("Bengaluru")
-						.state("Karnataka").country("India").pincode(560001).addressType("HOME").build()))
-				.build();
-	}
+                .skills(List.of(
+                        CandidateSkill.builder().skill("Java").build(),
+                        CandidateSkill.builder().skill("Spring Boot").build()
+                ))
+
+                .resumeUrl("https://s3.example.com/alice-resume.pdf")
+                .isOpenToRemote(true)
+
+                .preferredLocations(
+                        List.of(
+                                CandidatePreferredLocation.builder()
+                                        .location("Remote")
+                                        .build()
+                        )
+                )
+
+                .addresses(
+                        List.of(
+                                Address.builder()
+                                        .addressId(10L)
+                                        .houseNo("12B")
+                                        .street("MG Road")
+                                        .city("Bengaluru")
+                                        .state("Karnataka")
+                                        .country("India")
+                                        .pincode(560001)
+                                        .addressType("HOME")
+                                        .build()
+                        )
+                )
+
+                .build();
+    }
 
     private RecruiterProfile buildRecruiterProfile(Long userId) {
         return RecruiterProfile.builder()
@@ -190,6 +220,13 @@ class ProfileServiceImplTest {
         assertThat(response.getFullName()).isEqualTo("Alice Updated");
         assertThat(response.getAddresses()).hasSize(1);
         assertThat(response.getAddresses().get(0).getCountry()).isEqualTo("India");
+        assertThatCode(() -> profile.getSkills().add(CandidateSkill.builder().skill("SQL").build()))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> profile.getPreferredLocations().add(
+                CandidatePreferredLocation.builder().location("Pune").build()))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> profile.getAddresses().add(Address.builder().city("Mysuru").state("Karnataka").build()))
+                .doesNotThrowAnyException();
     }
 
     @Test

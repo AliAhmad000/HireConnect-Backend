@@ -23,6 +23,12 @@ public class WelcomeEmailServiceImpl implements WelcomeEmailService {
     @Value("${app.mail.from}")
     private String fromEmail;
 
+    @Value("${spring.mail.username:}")
+    private String mailUsername;
+
+    @Value("${app.frontend-url:http://localhost:4200}")
+    private String frontendUrl;
+
     @Value("${app.mail.from-name}")
     private String fromName;
 
@@ -37,7 +43,7 @@ public class WelcomeEmailServiceImpl implements WelcomeEmailService {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            helper.setFrom(fromEmail, fromName);
+            helper.setFrom(getFromEmail(), fromName);
             helper.setTo(user.getEmail());
             helper.setSubject("Welcome to HireConnect");
             helper.setText(buildWelcomeEmail(user), true);
@@ -63,7 +69,7 @@ public class WelcomeEmailServiceImpl implements WelcomeEmailService {
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            helper.setFrom(fromEmail, fromName);
+            helper.setFrom(getFromEmail(), fromName);
             helper.setTo(user.getEmail());
             helper.setSubject("Reset your HireConnect password");
             helper.setText(buildPasswordResetEmail(user, resetToken, resetUrl), true);
@@ -86,7 +92,10 @@ public class WelcomeEmailServiceImpl implements WelcomeEmailService {
         String nextStep = recruiter
                 ? "Complete your recruiter profile, post your first job, and start managing applicants from your dashboard."
                 : "Complete your candidate profile, explore matching jobs, and track your applications from your dashboard.";
-        String buttonUrl = recruiter ? "http://localhost:4200/recruiter/dashboard" : "http://localhost:4200/candidate/dashboard";
+        String frontendBaseUrl = frontendUrl == null || frontendUrl.isBlank()
+                ? "http://localhost:4200"
+                : frontendUrl.replaceAll("/$", "");
+        String buttonUrl = frontendBaseUrl + (recruiter ? "/recruiter/dashboard" : "/candidate/dashboard");
 
         return """
                 <!DOCTYPE html>
@@ -168,5 +177,15 @@ public class WelcomeEmailServiceImpl implements WelcomeEmailService {
                 </body>
                 </html>
                 """.formatted(name, resetUrl, resetToken);
+    }
+
+    private String getFromEmail() {
+        if (fromEmail != null && !fromEmail.isBlank()) {
+            return fromEmail;
+        }
+        if (mailUsername != null && !mailUsername.isBlank()) {
+            return mailUsername;
+        }
+        return "no-reply@hireconnect.local";
     }
 }

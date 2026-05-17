@@ -12,8 +12,8 @@ spring:
 
   datasource:
     url: ${INTERVIEW_DB_URL}
-    username: ${INTERVIEW_DB_USERNAME}
-    password: ${INTERVIEW_DB_PASSWORD}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
     hikari:
